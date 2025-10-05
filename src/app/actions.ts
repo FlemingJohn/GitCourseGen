@@ -52,15 +52,18 @@ export async function convertToMarkdownAction(prevState: any, formData: FormData
 
 
 const githubSchema = z.object({
-  token: z.string().min(1, 'GitHub token is required.'),
   repo: z.string().min(1, 'Repository is required.').refine(val => val.includes('/'), { message: 'Invalid repository format. Use "owner/repo-name".' }),
   content: z.string().min(1, 'Content cannot be empty.'),
   topic: z.string().min(1, 'Topic is required.'),
 });
 
 export async function pushToGithubAction(prevState: any, formData: FormData) {
+    const token = process.env.GITHUB_TOKEN;
+    if (!token) {
+        return { error: 'GitHub token is not configured. Please set the GITHUB_TOKEN environment variable.' };
+    }
+
     const validatedFields = githubSchema.safeParse({
-        token: formData.get('token'),
         repo: formData.get('repo'),
         content: formData.get('content'),
         topic: formData.get('topic'),
@@ -73,8 +76,8 @@ export async function pushToGithubAction(prevState: any, formData: FormData) {
         };
     }
 
-    const { token, repo, content, topic } = validatedFields.data;
-    const fileName = `${topic.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}.md`;
+    const { repo, content, topic } = validatedFields.data;
+    const fileName = `${topic.toLowerCase().replace(/[^a-z0-9\\s-]/g, '').replace(/\\s+/g, '-')}.md`;
     const [owner, repoName] = repo.split('/');
     
     const url = `https://api.github.com/repos/${owner}/${repoName}/contents/${fileName}`;

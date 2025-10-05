@@ -12,7 +12,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, Sparkles, BookMarked, Github, ArrowRight, ExternalLink } from 'lucide-react';
 import { Textarea } from './ui/textarea';
-import GithubTokenDialog from './github-token-dialog';
 
 type Step = 1 | 2 | 3;
 
@@ -22,8 +21,6 @@ export default function CourseGenerator() {
   const [topic, setTopic] = useState('');
   const [outline, setOutline] = useState('');
   const [markdown, setMarkdown] = useState('');
-  const [githubToken, setGithubToken] = useState<string | null>(null);
-  const [isTokenDialogOpen, setIsTokenDialogOpen] = useState(false);
   
   const [outlineState, outlineFormAction] = useFormState(generateOutlineAction, { outline: '', error: '' });
   const [markdownState, markdownFormAction] = useFormState(convertToMarkdownAction, { markdownContent: '', error: '' });
@@ -34,13 +31,6 @@ export default function CourseGenerator() {
   const [isGithubPending, startGithubTransition] = useTransition();
 
   const markdownPreviewRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem('github_token');
-    if (token) {
-      setGithubToken(token);
-    }
-  }, []);
 
   useEffect(() => {
     if (outlineState.outline) {
@@ -97,21 +87,9 @@ export default function CourseGenerator() {
   };
 
   const handlePushToGithub = (formData: FormData) => {
-    if (!githubToken) {
-      setIsTokenDialogOpen(true);
-      return;
-    }
-    formData.append('token', githubToken);
     formData.append('content', markdown);
     formData.append('topic', topic);
     startGithubTransition(() => githubFormAction(formData));
-  };
-
-  const handleTokenSave = (token: string) => {
-    localStorage.setItem('github_token', token);
-    setGithubToken(token);
-    setIsTokenDialogOpen(false);
-    toast({ title: "GitHub Token Saved", description: "You can now push to your repository." });
   };
 
   return (
@@ -182,10 +160,7 @@ export default function CourseGenerator() {
                     <Label htmlFor="repo">GitHub Repository</Label>
                     <Input id="repo" name="repo" placeholder="owner/repo-name" required disabled={isGithubPending} className="mt-2" />
                     <p className="text-sm text-muted-foreground mt-2">
-                      {!githubToken ? "You'll need a GitHub token to continue. " : "Using saved GitHub token. "}
-                      <Button variant="link" type="button" className="p-0 h-auto text-primary" onClick={() => setIsTokenDialogOpen(true)}>
-                        {!githubToken ? "Set Token" : "Update Token"}
-                      </Button>
+                      To push to GitHub, make sure your GITHUB_TOKEN is set in your environment variables.
                     </p>
                 </div>
             </CardContent>
@@ -198,8 +173,6 @@ export default function CourseGenerator() {
           </form>
         </Card>
       )}
-
-      <GithubTokenDialog isOpen={isTokenDialogOpen} onOpenChange={setIsTokenDialogOpen} onSave={handleTokenSave} />
     </div>
   );
 }
