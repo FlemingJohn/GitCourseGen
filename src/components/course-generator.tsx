@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useTransition, useEffect, useRef } from 'react';
-import { useFormState } from 'react-dom';
+import { useState, useTransition, useEffect, useRef, useActionState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 
 import { generateOutlineAction, convertToMarkdownAction, pushToGithubAction } from '@/app/actions';
@@ -22,9 +21,9 @@ export default function CourseGenerator() {
   const [outline, setOutline] = useState('');
   const [markdown, setMarkdown] = useState('');
   
-  const [outlineState, outlineFormAction] = useFormState(generateOutlineAction, { outline: '', error: '' });
-  const [markdownState, markdownFormAction] = useFormState(convertToMarkdownAction, { markdownContent: '', error: '' });
-  const [githubState, githubFormAction] = useFormState(pushToGithubAction, { success: '', error: '', url: '' });
+  const [outlineState, outlineFormAction] = useActionState(generateOutlineAction, { outline: '', error: '' });
+  const [markdownState, markdownFormAction] = useActionState(convertToMarkdownAction, { markdownContent: '', error: '' });
+  const [githubState, githubFormAction] = useActionState(pushToGithubAction, { success: '', error: '', url: '' });
 
   const [isOutlinePending, startOutlineTransition] = useTransition();
   const [isMarkdownPending, startMarkdownTransition] = useTransition();
