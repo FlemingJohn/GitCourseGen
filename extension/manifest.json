@@ -18,17 +18,6 @@
   "action": {
     "default_title": "Open GitCourseGen"
   },
-  "web_accessible_resources": [
-    {
-        "resources": ["icons/icon16.png"],
-        "matches": ["https://www.youtube.com/*"]
-    }
-  ],
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
   "side_panel": {
     "default_path": "sidepanel.html"
   }

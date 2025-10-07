@@ -9,13 +9,6 @@ function addCourseGenButton() {
         courseGenButton.id = 'course-gen-button';
         courseGenButton.className = 'course-gen-button';
         
-        const icon = document.createElement('img');
-        icon.src = chrome.runtime.getURL('icons/icon16.png');
-        icon.style.width = '16px';
-        icon.style.height = '16px';
-        icon.style.marginRight = '8px';
-        
-        courseGenButton.appendChild(icon);
         courseGenButton.appendChild(document.createTextNode('GitCourseGen'));
 
         courseGenButton.onclick = () => {
