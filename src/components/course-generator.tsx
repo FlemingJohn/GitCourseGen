@@ -91,7 +91,7 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
   };
 
   const handlePushToGithub = (formData: FormData) => {
-    formData.append('content', markdown);
+    // No longer need to manually append content, but need to append topic.
     formData.append('topic', topic);
     startGithubTransition(() => githubFormAction(formData));
   };
@@ -158,7 +158,7 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
             <CardContent className="space-y-6">
                 <div>
                     <Label>Markdown Content</Label>
-                    <Textarea value={markdown} name="content" readOnly className="mt-2 font-mono text-sm min-h-[400px] max-h-[60vh] bg-secondary border-border focus-visible:ring-primary" />
+                    <Textarea name="content" defaultValue={markdown} disabled className="mt-2 font-mono text-sm min-h-[400px] max-h-[60vh] bg-secondary border-border focus-visible:ring-primary" />
                 </div>
                 <div>
                     <Label htmlFor="repo">GitHub Repository</Label>
