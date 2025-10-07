@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect, useRef, useActionState } from 'react';
 import { useToast } from "@/hooks/use-toast";
+import type { Session } from 'next-auth';
 
 import { generateOutlineAction, convertToMarkdownAction, pushToGithubAction } from '@/app/actions';
 
@@ -14,7 +15,11 @@ import { Textarea } from './ui/textarea';
 
 type Step = 1 | 2 | 3;
 
-export default function CourseGenerator() {
+interface CourseGeneratorProps {
+  session: Session | null;
+}
+
+export default function CourseGenerator({ session }: CourseGeneratorProps) {
   const { toast } = useToast();
   const [step, setStep] = useState<Step>(1);
   const [topic, setTopic] = useState('');
@@ -30,7 +35,7 @@ export default function CourseGenerator() {
   const [isGithubPending, startGithubTransition] = useTransition();
 
   const markdownPreviewRef = useRef<HTMLDivElement>(null);
-
+  
   useEffect(() => {
     if (outlineState.outline) {
       setOutline(outlineState.outline);
@@ -140,7 +145,7 @@ export default function CourseGenerator() {
         </Card>
       )}
 
-      {step === 3 && markdown && (
+      {step === 3 && markdown && session && (
         <Card ref={markdownPreviewRef}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -157,10 +162,7 @@ export default function CourseGenerator() {
                 </div>
                 <div>
                     <Label htmlFor="repo">GitHub Repository</Label>
-                    <Input id="repo" name="repo" placeholder="owner/repo-name" required disabled={isGithubPending} className="mt-2" />
-                    <p className="text-sm text-muted-foreground mt-2">
-                      To push to GitHub, make sure your GITHUB_TOKEN is set in your environment variables.
-                    </p>
+                    <Input id="repo" name="repo" placeholder="owner/repo-name" required disabled={isGithubPending} className="mt-2" defaultValue={`${session.user?.name}/my-awesome-course`} />
                 </div>
             </CardContent>
             <CardFooter>
