@@ -161,7 +161,7 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
                 </div>
                 <div>
                     <Label htmlFor="repo">GitHub Repository</Label>
-                    <Input id="repo" name="repo" placeholder="owner/repo-name" required disabled={isGithubPending} className="mt-2" defaultValue={`${session.user?.name?.toLowerCase()}/my-awesome-course`} />
+                    <Input id="repo" name="repo" placeholder="owner/repo-name" required disabled={isGithubPending} className="mt-2" />
                 </div>
             </CardContent>
             <CardFooter>
