@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useEffect, useRef, useActionState } from 'react';
+import { useState, useEffect, useRef, useActionState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import type { Session } from 'next-auth';
 
@@ -76,13 +76,6 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
     }
   }, [githubState, toast]);
   
-  const handleConvertToMarkdown = () => {
-    const fullContent = `# ${title}\n\n${outline}`;
-    const formData = new FormData();
-    formData.append('courseContent', fullContent);
-    markdownFormAction(formData);
-  };
-
   return (
     <div className="space-y-8">
       <Card>
@@ -120,25 +113,28 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
             </CardTitle>
             <CardDescription>Here's your generated title and outline. When you're ready, convert it to Markdown.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-             <div>
-                <Label>Generated Title</Label>
-                <Input value={title} readOnly className="mt-2 font-bold text-lg bg-secondary" />
-            </div>
-             <div>
-                <Label>Generated Outline</Label>
-                 <div className="p-4 bg-secondary rounded-md max-h-96 overflow-y-auto text-sm whitespace-pre-wrap font-mono mt-2">
-                    {outline}
-                 </div>
-             </div>
-          </CardContent>
-          <CardFooter>
-            <Button onClick={handleConvertToMarkdown} disabled={isMarkdownPending || step > 2}>
-              {isMarkdownPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Convert to Markdown
-              {!isMarkdownPending && step === 2 && <ArrowRight className="ml-2 h-4 w-4" />}
-            </Button>
-          </CardFooter>
+          <form action={markdownFormAction}>
+              <CardContent className="space-y-4">
+                <input type="hidden" name="courseContent" value={`# ${title}\n\n${outline}`} />
+                <div>
+                    <Label>Generated Title</Label>
+                    <Input value={title} readOnly className="mt-2 font-bold text-lg bg-secondary" />
+                </div>
+                <div>
+                    <Label>Generated Outline</Label>
+                    <div className="p-4 bg-secondary rounded-md max-h-96 overflow-y-auto text-sm whitespace-pre-wrap font-mono mt-2">
+                        {outline}
+                    </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button type="submit" disabled={isMarkdownPending || step > 2}>
+                  {isMarkdownPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Convert to Markdown
+                  {!isMarkdownPending && step === 2 && <ArrowRight className="ml-2 h-4 w-4" />}
+                </Button>
+              </CardFooter>
+          </form>
         </Card>
       )}
 
@@ -157,7 +153,7 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
                 <input type="hidden" name="topic" value={topic} />
                 <div>
                     <Label>Markdown Content</Label>
-                    <Textarea value={markdown} disabled className="mt-2 font-mono text-sm min-h-[400px] max-h-[60vh] bg-secondary border-border focus-visible:ring-primary" />
+                    <Textarea defaultValue={markdown} disabled className="mt-2 font-mono text-sm min-h-[400px] max-h-[60vh] bg-secondary border-border focus-visible:ring-primary" />
                 </div>
                 <div>
                     <Label htmlFor="repo">GitHub Repository</Label>
