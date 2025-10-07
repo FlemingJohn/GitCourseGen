@@ -17,6 +17,27 @@ interface CourseGeneratorProps {
   session: Session | null;
 }
 
+// Helper functions to interact with chrome.storage
+const getStorageData = (key: string): Promise<any> => {
+    return new Promise((resolve) => {
+        if (chrome.storage && chrome.storage.local) {
+            chrome.storage.local.get(key, (result) => {
+                resolve(result[key]);
+            });
+        } else {
+            // Return undefined if chrome.storage is not available (e.g., in a normal browser tab)
+            resolve(undefined);
+        }
+    });
+};
+
+const setStorageData = (key: string, value: any) => {
+    if (chrome.storage && chrome.storage.local) {
+        chrome.storage.local.set({ [key]: value });
+    }
+};
+
+
 export default function CourseGenerator({ session }: CourseGeneratorProps) {
   const { toast } = useToast();
   
@@ -26,46 +47,26 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
 
   // Effect to load data from chrome.storage on component mount
   useEffect(() => {
-    if (window.parent !== window) { // Ensure we are in an iframe
-        const targetOrigin = "https://6000-firebase-studio-1759686915025.cluster-44kx2eiocbhe2tyk3zoyo3ryuo.cloudworkstations.dev";
-
-        // Ask the parent (sidepanel.js) for the stored data
-        window.parent.postMessage({ action: 'get', key: 'gitCourseGenTopic' }, targetOrigin);
-        window.parent.postMessage({ action: 'get', key: 'gitCourseGenRepo' }, targetOrigin);
-
-        const handleMessage = (event: MessageEvent) => {
-            if (event.origin !== targetOrigin) return;
-
-            const { action, key, value } = event.data;
-            if (action === 'get_response' && value) {
-                if (key === 'gitCourseGenTopic') {
-                    setTopic(value);
-                } else if (key === 'gitCourseGenRepo') {
-                    setRepo(value);
-                }
-            }
-        };
-
-        window.addEventListener('message', handleMessage);
+    const loadData = async () => {
+        const storedTopic = await getStorageData('gitCourseGenTopic');
+        if (storedTopic) setTopic(storedTopic);
         
-        return () => {
-            window.removeEventListener('message', handleMessage);
-        };
-    }
+        const storedRepo = await getStorageData('gitCourseGenRepo');
+        if (storedRepo) setRepo(storedRepo);
+    };
+    loadData();
   }, []);
 
   // Effect to save data to chrome.storage on change
   useEffect(() => {
-    if (window.parent !== window && isMounted.current) {
-        const targetOrigin = "https://6000-firebase-studio-1759686915025.cluster-44kx2eiocbhe2tyk3zoyo3ryuo.cloudworkstations.dev";
-        window.parent.postMessage({ action: 'set', key: 'gitCourseGenTopic', value: topic }, targetOrigin);
+    if (isMounted.current) {
+        setStorageData('gitCourseGenTopic', topic);
     }
   }, [topic]);
 
   useEffect(() => {
-    if (window.parent !== window && isMounted.current) {
-        const targetOrigin = "https://6000-firebase-studio-1759686915025.cluster-44kx2eiocbhe2tyk3zoyo3ryuo.cloudworkstations.dev";
-        window.parent.postMessage({ action: 'set', key: 'gitCourseGenRepo', value: repo }, targetOrigin);
+    if (isMounted.current) {
+        setStorageData('gitCourseGenRepo', repo);
     } else {
         // Mark as mounted after initial render to prevent saving empty initial state
         isMounted.current = true;
