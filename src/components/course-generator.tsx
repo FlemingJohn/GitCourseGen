@@ -23,23 +23,22 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
   const { toast } = useToast();
   const [step, setStep] = useState<Step>(1);
   const [topic, setTopic] = useState('');
+  const [title, setTitle] = useState('');
   const [outline, setOutline] = useState('');
   const [markdown, setMarkdown] = useState('');
   
-  const [outlineState, outlineFormAction] = useActionState(generateOutlineAction, { outline: '', error: '' });
-  const [markdownState, markdownFormAction] = useActionState(convertToMarkdownAction, { markdownContent: '', error: '' });
+  const [outlineState, outlineFormAction, isOutlinePending] = useActionState(generateOutlineAction, { outline: '', title: '', error: '' });
+  const [markdownState, markdownFormAction, isMarkdownPending] = useActionState(convertToMarkdownAction, { markdownContent: '', error: '' });
   const [githubState, githubFormAction, isGithubPending] = useActionState(pushToGithubAction, { success: '', error: '', url: '' });
-
-  const [isOutlinePending, startOutlineTransition] = useTransition();
-  const [isMarkdownPending, startMarkdownTransition] = useTransition();
 
   const markdownPreviewRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    if (outlineState.outline) {
+    if (outlineState.outline && outlineState.title) {
       setOutline(outlineState.outline);
+      setTitle(outlineState.title);
       setStep(2);
-      toast({ title: "Outline Generated!", description: "Review the outline and convert to Markdown." });
+      toast({ title: "Assets Generated!", description: "Review the title and outline, then convert to Markdown." });
     }
     if (outlineState.error) {
       toast({ variant: "destructive", title: "Error", description: outlineState.error });
@@ -76,17 +75,12 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
         toast({ variant: "destructive", title: "GitHub Push Failed", description: githubState.error });
     }
   }, [githubState, toast]);
-
-  const handleGenerateOutline = (formData: FormData) => {
-    const currentTopic = formData.get('topic') as string;
-    setTopic(currentTopic);
-    startOutlineTransition(() => outlineFormAction(formData));
-  };
   
   const handleConvertToMarkdown = () => {
+    const fullContent = `# ${title}\n\n${outline}`;
     const formData = new FormData();
-    formData.append('courseContent', outline);
-    startMarkdownTransition(() => markdownFormAction(formData));
+    formData.append('courseContent', fullContent);
+    markdownFormAction(formData);
   };
 
   return (
@@ -95,11 +89,14 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="text-primary" />
-            Step 1: Generate Your Course Outline
+            Step 1: Generate Your Course
           </CardTitle>
-          <CardDescription>Enter a topic and let AI craft a comprehensive outline for your new course.</CardDescription>
+          <CardDescription>Enter a topic and let AI craft a title and comprehensive outline for you.</CardDescription>
         </CardHeader>
-        <form action={handleGenerateOutline}>
+        <form action={(formData) => {
+          setTopic(formData.get('topic') as string);
+          outlineFormAction(formData);
+        }}>
           <CardContent>
             <Label htmlFor="topic">Course Topic</Label>
             <Input id="topic" name="topic" placeholder="e.g., 'Introduction to Quantum Computing'" required disabled={isOutlinePending || step > 1} className="mt-2" />
@@ -107,25 +104,32 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
           <CardFooter>
             <Button type="submit" disabled={isOutlinePending || step > 1}>
               {isOutlinePending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Generate Outline
+              Generate Course
               {!isOutlinePending && step === 1 && <ArrowRight className="ml-2 h-4 w-4" />}
             </Button>
           </CardFooter>
         </form>
       </Card>
 
-      {step >= 2 && outline && (
+      {step >= 2 && outline && title && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookMarked className="text-primary" />
               Step 2: Review and Convert
             </CardTitle>
-            <CardDescription>Here's your generated course outline. When you're ready, convert it to Markdown.</CardDescription>
+            <CardDescription>Here's your generated title and outline. When you're ready, convert it to Markdown.</CardDescription>
           </CardHeader>
-          <CardContent>
-             <div className="p-4 bg-secondary rounded-md max-h-96 overflow-y-auto text-sm whitespace-pre-wrap font-mono">
-                {outline}
+          <CardContent className="space-y-4">
+             <div>
+                <Label>Generated Title</Label>
+                <Input value={title} readOnly className="mt-2 font-bold text-lg bg-secondary" />
+            </div>
+             <div>
+                <Label>Generated Outline</Label>
+                 <div className="p-4 bg-secondary rounded-md max-h-96 overflow-y-auto text-sm whitespace-pre-wrap font-mono mt-2">
+                    {outline}
+                 </div>
              </div>
           </CardContent>
           <CardFooter>
@@ -148,16 +152,16 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
             <CardDescription>Review the final Markdown and push it directly to your GitHub repository.</CardDescription>
           </CardHeader>
           <form action={githubFormAction}>
-            <CardContent className="space-y-6">
+             <CardContent className="space-y-6">
                 <input type="hidden" name="content" value={markdown} />
                 <input type="hidden" name="topic" value={topic} />
                 <div>
                     <Label>Markdown Content</Label>
-                    <Textarea defaultValue={markdown} disabled className="mt-2 font-mono text-sm min-h-[400px] max-h-[60vh] bg-secondary border-border focus-visible:ring-primary" />
+                    <Textarea value={markdown} disabled className="mt-2 font-mono text-sm min-h-[400px] max-h-[60vh] bg-secondary border-border focus-visible:ring-primary" />
                 </div>
                 <div>
                     <Label htmlFor="repo">GitHub Repository</Label>
-                    <Input id="repo" name="repo" placeholder="owner/repo-name" required disabled={isGithubPending} className="mt-2" defaultValue={`${session.user?.name}/my-awesome-course`} />
+                    <Input id="repo" name="repo" placeholder="owner/repo-name" required disabled={isGithubPending} className="mt-2" defaultValue={`${session.user?.name?.toLowerCase()}/my-awesome-course`} />
                 </div>
             </CardContent>
             <CardFooter>

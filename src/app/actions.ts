@@ -1,6 +1,7 @@
 'use server';
 
 import { generateCourseOutline } from '@/ai/flows/generate-course-outline';
+import { generateCourseTitle } from '@/ai/flows/generate-course-title';
 import { convertContentToMarkdown } from '@/ai/flows/convert-content-to-markdown';
 import { z } from 'zod';
 import { auth } from '@/auth';
@@ -22,9 +23,10 @@ export async function generateOutlineAction(prevState: any, formData: FormData) 
   
   try {
     const { outline } = await generateCourseOutline({ topic: validatedFields.data.topic });
-    return { outline };
+    const { title } = await generateCourseTitle({ topic: validatedFields.data.topic });
+    return { outline, title };
   } catch (e) {
-    return { error: 'Failed to generate course outline. Please try again.' };
+    return { error: 'Failed to generate course assets. Please try again.' };
   }
 }
 
