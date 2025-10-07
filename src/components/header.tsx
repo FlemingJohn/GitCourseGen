@@ -1,6 +1,8 @@
+'use client';
+
 import { Github } from 'lucide-react';
 import Link from 'next/link';
-import { auth, signIn, signOut } from '@/auth';
+import { signIn, signOut, useSession } from 'next-auth/react';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import {
@@ -12,8 +14,8 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 
-async function AuthButton() {
-  const session = await auth();
+function AuthButton() {
+  const { data: session } = useSession();
 
   if (session?.user) {
     return (
@@ -34,35 +36,19 @@ async function AuthButton() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <form
-            action={async () => {
-              'use server';
-              await signOut();
-            }}
-          >
-            <button type="submit" className="w-full">
-              <DropdownMenuItem className="cursor-pointer">
-                Sign out
-              </DropdownMenuItem>
-            </button>
-          </form>
+          <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer">
+            Sign out
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     );
   }
 
   return (
-    <form
-      action={async () => {
-        'use server';
-        await signIn('github', { redirectTo: '/' });
-      }}
-    >
-      <Button variant="outline">
-        <Github className="mr-2 h-4 w-4" />
-        Sign in with GitHub
-      </Button>
-    </form>
+    <Button onClick={() => signIn('github')} variant="outline">
+      <Github className="mr-2 h-4 w-4" />
+      Sign in with GitHub
+    </Button>
   );
 }
 

@@ -1,9 +1,12 @@
+'use client';
+
 import Header from '@/components/header';
 import CourseGenerator from '@/components/course-generator';
-import { auth } from '@/auth';
+import { useSession } from 'next-auth/react';
 
-export default async function Home() {
-  const session = await auth();
+export default function Home() {
+  const { data: session } = useSession();
+  
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />
