@@ -28,11 +28,10 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
   
   const [outlineState, outlineFormAction] = useActionState(generateOutlineAction, { outline: '', error: '' });
   const [markdownState, markdownFormAction] = useActionState(convertToMarkdownAction, { markdownContent: '', error: '' });
-  const [githubState, githubFormAction] = useActionState(pushToGithubAction, { success: '', error: '', url: '' });
+  const [githubState, githubFormAction, isGithubPending] = useActionState(pushToGithubAction, { success: '', error: '', url: '' });
 
   const [isOutlinePending, startOutlineTransition] = useTransition();
   const [isMarkdownPending, startMarkdownTransition] = useTransition();
-  const [isGithubPending, startGithubTransition] = useTransition();
 
   const markdownPreviewRef = useRef<HTMLDivElement>(null);
   
@@ -88,12 +87,6 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
     const formData = new FormData();
     formData.append('courseContent', outline);
     startMarkdownTransition(() => markdownFormAction(formData));
-  };
-
-  const handlePushToGithub = (formData: FormData) => {
-    // No longer need to manually append content, but need to append topic.
-    formData.append('topic', topic);
-    startGithubTransition(() => githubFormAction(formData));
   };
 
   return (
@@ -154,11 +147,13 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
             </CardTitle>
             <CardDescription>Review the final Markdown and push it directly to your GitHub repository.</CardDescription>
           </CardHeader>
-          <form action={handlePushToGithub}>
+          <form action={githubFormAction}>
             <CardContent className="space-y-6">
+                <input type="hidden" name="content" value={markdown} />
+                <input type="hidden" name="topic" value={topic} />
                 <div>
                     <Label>Markdown Content</Label>
-                    <Textarea name="content" defaultValue={markdown} disabled className="mt-2 font-mono text-sm min-h-[400px] max-h-[60vh] bg-secondary border-border focus-visible:ring-primary" />
+                    <Textarea defaultValue={markdown} disabled className="mt-2 font-mono text-sm min-h-[400px] max-h-[60vh] bg-secondary border-border focus-visible:ring-primary" />
                 </div>
                 <div>
                     <Label htmlFor="repo">GitHub Repository</Label>
