@@ -1,0 +1,22 @@
+/* styles.css for content script */
+
+.course-gen-button {
+  background-color: hsl(140 56% 41%); /* primary color */
+  color: white;
+  border: none;
+  border-radius: 18px;
+  padding: 0 16px;
+  height: 36px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  transition: background-color 0.2s;
+}
+
+.course-gen-button:hover {
+  background-color: hsl(140 56% 51%);
+}
