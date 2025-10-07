@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useActionState } from 'react';
+import { useEffect, useActionState, useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import type { Session } from 'next-auth';
 
@@ -20,6 +20,59 @@ interface CourseGeneratorProps {
 export default function CourseGenerator({ session }: CourseGeneratorProps) {
   const { toast } = useToast();
   
+  const [topic, setTopic] = useState('');
+  const [repo, setRepo] = useState('');
+  const isMounted = useRef(false);
+
+  // Effect to load data from chrome.storage on component mount
+  useEffect(() => {
+    if (window.parent !== window) { // Ensure we are in an iframe
+        const targetOrigin = "https://6000-firebase-studio-1759686915025.cluster-44kx2eiocbhe2tyk3zoyo3ryuo.cloudworkstations.dev";
+
+        // Ask the parent (sidepanel.js) for the stored data
+        window.parent.postMessage({ action: 'get', key: 'gitCourseGenTopic' }, targetOrigin);
+        window.parent.postMessage({ action: 'get', key: 'gitCourseGenRepo' }, targetOrigin);
+
+        const handleMessage = (event: MessageEvent) => {
+            if (event.origin !== targetOrigin) return;
+
+            const { action, key, value } = event.data;
+            if (action === 'get_response' && value) {
+                if (key === 'gitCourseGenTopic') {
+                    setTopic(value);
+                } else if (key === 'gitCourseGenRepo') {
+                    setRepo(value);
+                }
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        
+        return () => {
+            window.removeEventListener('message', handleMessage);
+        };
+    }
+  }, []);
+
+  // Effect to save data to chrome.storage on change
+  useEffect(() => {
+    if (window.parent !== window && isMounted.current) {
+        const targetOrigin = "https://6000-firebase-studio-1759686915025.cluster-44kx2eiocbhe2tyk3zoyo3ryuo.cloudworkstations.dev";
+        window.parent.postMessage({ action: 'set', key: 'gitCourseGenTopic', value: topic }, targetOrigin);
+    }
+  }, [topic]);
+
+  useEffect(() => {
+    if (window.parent !== window && isMounted.current) {
+        const targetOrigin = "https://6000-firebase-studio-1759686915025.cluster-44kx2eiocbhe2tyk3zoyo3ryuo.cloudworkstations.dev";
+        window.parent.postMessage({ action: 'set', key: 'gitCourseGenRepo', value: repo }, targetOrigin);
+    } else {
+        // Mark as mounted after initial render to prevent saving empty initial state
+        isMounted.current = true;
+    }
+  }, [repo]);
+
+
   const [githubState, githubFormAction, isGithubPending] = useActionState(generateAndPushToGithubAction, { success: '', error: '', url: '' });
 
   useEffect(() => {
@@ -66,11 +119,11 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
           <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="topic">Course Topic</Label>
-                <Input id="topic" name="topic" placeholder="e.g., 'Intro to Python for Data Science'" required disabled={isGithubPending} className="mt-2" />
+                <Input id="topic" name="topic" placeholder="e.g., 'Intro to Python for Data Science'" required disabled={isGithubPending} className="mt-2" value={topic} onChange={(e) => setTopic(e.target.value)} />
               </div>
               <div>
                 <Label htmlFor="repo">GitHub Repository</Label>
-                <Input id="repo" name="repo" placeholder="your-github-username/new-repo-name" required disabled={isGithubPending} className="mt-2" />
+                <Input id="repo" name="repo" placeholder="your-github-username/new-repo-name" required disabled={isGithubPending} className="mt-2" value={repo} onChange={(e) => setRepo(e.target.value)} />
               </div>
           </CardContent>
           <CardFooter>
