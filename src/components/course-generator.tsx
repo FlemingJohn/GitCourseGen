@@ -86,13 +86,10 @@ export default function CourseGenerator({ session }: CourseGeneratorProps) {
           </CardTitle>
           <CardDescription>Enter a topic and let AI craft a title and comprehensive outline for you.</CardDescription>
         </CardHeader>
-        <form action={(formData) => {
-          setTopic(formData.get('topic') as string);
-          outlineFormAction(formData);
-        }}>
+        <form action={outlineFormAction}>
           <CardContent>
             <Label htmlFor="topic">Course Topic</Label>
-            <Input id="topic" name="topic" placeholder="e.g., 'Introduction to Quantum Computing'" required disabled={isOutlinePending || step > 1} className="mt-2" />
+            <Input id="topic" name="topic" placeholder="e.g., 'Introduction to Quantum Computing'" required disabled={isOutlinePending || step > 1} className="mt-2" onChange={(e) => setTopic(e.target.value)} />
           </CardContent>
           <CardFooter>
             <Button type="submit" disabled={isOutlinePending || step > 1}>
